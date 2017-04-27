@@ -241,10 +241,12 @@ void TruthTrackFinder::processEvent( LCEvent* evt ) {
   // Make the container
   std::map<MCParticle*, std::vector<TrackerHit*> > particleHits;
 
+    std::cout<<"Getting hits associated to MC particles"<<std::endl;
 	// Loop over all input collections
 	for(unsigned int collection=0; collection<trackerHitCollections.size();collection++){
   	// Loop over tracker hits
 	  int nHits = trackerHitCollections[collection]->getNumberOfElements();
+        std::cout<<"Collection "<<collection<<" has "<<nHits<<" hits"<<std::endl;
 	  for(int itHit=0;itHit<nHits;itHit++){
         
 	    // Get the hit
@@ -255,7 +257,13 @@ void TruthTrackFinder::processEvent( LCEvent* evt ) {
 
 	    // Take the first hit only (this should be changed? Yes - loop over all related simHits and add an entry for each mcparticle so that this hit is in each fit)
 	    SimTrackerHit* simHit = dynamic_cast<SimTrackerHit*>(simHitVector.at(0));
-
+          
+        // If the hit was produced by a secondary which was not saved to the MCParticle collection
+          std::cout<<" - hit "<<itHit<<" is "<< (simHit->isProducedBySecondary() ? "bad" : "good" ) << std::endl;
+          if(simHit->isProducedBySecondary()){
+              std::cout<<" -- discarding hit"<<std::endl;
+              continue;
+          }
 	    // Get the particle belonging to that hit
 	    MCParticle* particle = simHit->getMCParticle();
 
@@ -275,6 +283,8 @@ void TruthTrackFinder::processEvent( LCEvent* evt ) {
     // Get the vector of hits from the container
     if(particleHits.count(mcParticle) == 0) continue;
     std::vector<TrackerHit*> trackHits = particleHits[mcParticle];
+      std::cout<<"- MC particle has "<<trackHits.size()<<" hits"<<std::endl;
+
 
     // Only make tracks with 3 or more hits
     if(trackHits.size() < 3) continue;
